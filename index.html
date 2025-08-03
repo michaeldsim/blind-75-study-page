@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blind 75 LeetCode Selector</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .controls {
+        padding: 30px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .control-group {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .search-box {
+        width: 100%;
+      }
+
+      .search-box input {
+        width: 100%;
+        padding: 12px 20px;
+        border: 1px solid #ddd;
+        border-radius: 25px;
+        font-size: 1rem;
+        outline: none;
+        transition: all 0.3s ease;
+      }
+
+      .search-box input:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 8px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 25px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(255, 107, 107, 0.4);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #10ac84 0%, #00d2d3 100%);
+        color: white;
+        box-shadow: 0 4px 15px rgba(16, 172, 132, 0.3);
+      }
+
+      .btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(16, 172, 132, 0.4);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: #667eea;
+        border: 2px solid #667eea;
+      }
+
+      .btn-outline:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      .btn-difficulty {
+        background: #f0f0f0;
+        color: #333;
+        border: 1px solid #ccc;
+      }
+
+      .btn-difficulty.easy {
+        background: #d4edda;
+        color: #155724;
+      }
+      .btn-difficulty.medium {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .btn-difficulty.hard {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .btn-difficulty:hover {
+        opacity: 0.8;
+      }
+
+      .result {
+        padding: 30px;
+        text-align: center;
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        color: white;
+        margin: 20px;
+        border-radius: 15px;
+        box-shadow: 0 8px 25px rgba(240, 147, 251, 0.3);
+      }
+
+      .result h2 {
+        font-size: 2rem;
+        margin-bottom: 10px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        display: flex; /* Allow checkbox next to title */
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .result h2 input[type="checkbox"] {
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+      }
+
+      .result p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .topics {
+        padding: 30px;
+      }
+
+      .topic-section {
+        margin-bottom: 30px;
+        border: 1px solid #e0e0e0;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .topic-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .topic-header:hover {
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+      }
+
+      .topic-header h3 {
+        font-size: 1.3rem;
+        margin: 0;
+      }
+
+      .topic-toggle {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .topic-content {
+        padding: 20px;
+        background: #f8f9ff;
+        display: none; /* Hidden by default */
+      }
+
+      .topic-content.expanded {
+        display: block; /* Show when expanded */
+      }
+
+      .questions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 15px;
+      }
+
+      .question-item {
+        background: white;
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+      }
+
+      .question-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+      }
+
+      .question-item.disabled {
+        background: #f5f5f5;
+        color: #999;
+        opacity: 0.7;
+        border-color: #f5f5f5;
+      }
+
+      .question-item input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .question-name {
+        font-weight: 600;
+        flex-grow: 1;
+        color: #667eea;
+        text-decoration: none; /* Removed underline */
+        cursor: pointer;
+      }
+
+      .question-item:hover .question-name {
+        text-decoration: underline; /* Add underline on hover */
+      }
+
+      .question-item.disabled .question-name {
+        color: #999;
+        text-decoration: none;
+      }
+
+      .difficulty {
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+
+      .difficulty.easy {
+        background: #d4edda;
+        color: #155724;
+      }
+
+      .difficulty.medium {
+        background: #fff3cd;
+        color: #856404;
+      }
+
+      .difficulty.hard {
+        background: #f8d7da;
+        color: #721c24;
+      }
+
+      .stats {
+        background: #f8f9ff;
+        padding: 20px;
+        margin: 20px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      }
+
+      .stats h3 {
+        color: #667eea;
+        margin-bottom: 10px;
+      }
+
+      .topic-chevron {
+        transition: transform 0.3s ease;
+      }
+
+      .topic-chevron.rotated {
+        transform: rotate(180deg);
+      }
+
+      @media (max-width: 768px) {
+        .control-group {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .btn {
+          width: 100%;
+        }
+
+        .header h1 {
+          font-size: 2rem;
+        }
+
+        .questions-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🧠 Blind 75 LeetCode Selector</h1>
+        <p>Practice the most important coding interview questions</p>
+      </div>
+
+      <div class="controls">
+        <div class="control-group">
+          <button class="btn btn-primary" onclick="getRandomQuestion()">
+            🎲 Get Random Question
+          </button>
+          <button class="btn btn-secondary" onclick="selectAll()">
+            ✅ Select All
+          </button>
+          <button class="btn btn-outline" onclick="deselectAll()">
+            ❌ Deselect All
+          </button>
+        </div>
+        <div class="control-group">
+          <button
+            class="btn btn-difficulty easy"
+            onclick="filterByDifficulty('easy')"
+          >
+            Easy
+          </button>
+          <button
+            class="btn btn-difficulty medium"
+            onclick="filterByDifficulty('medium')"
+          >
+            Medium
+          </button>
+          <button
+            class="btn btn-difficulty hard"
+            onclick="filterByDifficulty('hard')"
+          >
+            Hard
+          </button>
+          <button class="btn btn-outline" onclick="clearDifficultyFilter()">
+            Clear Difficulty Filter
+          </button>
+        </div>
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            placeholder="🔍 Search questions..."
+            oninput="renderTopics()"
+          />
+        </div>
+      </div>
+
+      <div class="result" id="result">
+        <h2>Click "Get Random Question" to start!</h2>
+        <p>Configure your preferences below first</p>
+      </div>
+
+      <div class="stats">
+        <h3>📊 Statistics</h3>
+        <p id="stats">0 questions selected out of 0 total</p>
+      </div>
+
+      <div class="topics" id="topics"></div>
+    </div>
+
+    <script>
+      // Define the blind75Questions object
+      const blind75Questions = {
+        "Array & Hashing": [
+          {
+            name: "Contains Duplicate",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/contains-duplicate/",
+          },
+          {
+            name: "Valid Anagram",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/valid-anagram/",
+          },
+          {
+            name: "Two Sum",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/two-sum/",
+          },
+          {
+            name: "Group Anagrams",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/group-anagrams/",
+          },
+          {
+            name: "Top K Frequent Elements",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/top-k-frequent-elements/",
+          },
+          {
+            name: "Product of Array Except Self",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/product-of-array-except-self/",
+          },
+          {
+            name: "Valid Sudoku",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/valid-sudoku/",
+          },
+          {
+            name: "Longest Consecutive Sequence",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/longest-consecutive-sequence/",
+          },
+        ],
+        "Two Pointers": [
+          {
+            name: "Valid Palindrome",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/valid-palindrome/",
+          },
+          {
+            name: "Two Sum II - Input Array Is Sorted",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
+          },
+          {
+            name: "3Sum",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/3sum/",
+          },
+          {
+            name: "Container With Most Water",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/container-with-most-water/",
+          },
+        ],
+        "Sliding Window": [
+          {
+            name: "Best Time to Buy and Sell Stock",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/best-time-to-buy-and-sell-stock/",
+          },
+          {
+            name: "Longest Substring Without Repeating Characters",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
+          },
+          {
+            name: "Longest Repeating Character Replacement",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/longest-repeating-character-replacement/",
+          },
+          {
+            name: "Permutation in String",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/permutation-in-string/",
+          },
+          {
+            name: "Minimum Window Substring",
+            difficulty: "hard",
+            url: "https://leetcode.com/problems/minimum-window-substring/",
+          },
+        ],
+        Stack: [
+          {
+            name: "Valid Parentheses",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/valid-parentheses/",
+          },
+          {
+            name: "Min Stack",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/min-stack/",
+          },
+          {
+            name: "Evaluate Reverse Polish Notation",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/evaluate-reverse-polish-notation/",
+          },
+          {
+            name: "Generate Parentheses",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/generate-parentheses/",
+          },
+          {
+            name: "Daily Temperatures",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/daily-temperatures/",
+          },
+          {
+            name: "Car Fleet",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/car-fleet/",
+          },
+          {
+            name: "Largest Rectangle in Histogram",
+            difficulty: "hard",
+            url: "https://leetcode.com/problems/largest-rectangle-in-histogram/",
+          },
+        ],
+        "Binary Search": [
+          {
+            name: "Binary Search",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/binary-search/",
+          },
+          {
+            name: "Search a 2D Matrix",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/search-a-2d-matrix/",
+          },
+          {
+            name: "Koko Eating Bananas",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/koko-eating-bananas/",
+          },
+          {
+            name: "Find Minimum in Rotated Sorted Array",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/",
+          },
+          {
+            name: "Search in Rotated Sorted Array",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/search-in-rotated-sorted-array/",
+          },
+          {
+            name: "Time Based Key-Value Store",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/time-based-key-value-store/",
+          },
+          {
+            name: "Median of Two Sorted Arrays",
+            difficulty: "hard",
+            url: "https://leetcode.com/problems/median-of-two-sorted-arrays/",
+          },
+        ],
+        Trees: [
+          {
+            name: "Invert Binary Tree",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/invert-binary-tree/",
+          },
+          {
+            name: "Maximum Depth of Binary Tree",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/maximum-depth-of-binary-tree/",
+          },
+          {
+            name: "Same Tree",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/same-tree/",
+          },
+          {
+            name: "Subtree of Another Tree",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/subtree-of-another-tree/",
+          },
+          {
+            name: "Lowest Common Ancestor of a Binary Search Tree",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/lowest-common-ancestor-of-a-binary-search-tree/",
+          },
+          {
+            name: "Build Tree from Preorder and Inorder Traversal",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/",
+          },
+          {
+            name: "Validate Binary Search Tree",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/validate-binary-search-tree/",
+          },
+          {
+            name: "Kth Smallest Element in a BST",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/kth-smallest-element-in-a-bst/",
+          },
+          {
+            name: "Cousins in Binary Tree",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/cousins-in-binary-tree/",
+          },
+          {
+            name: "Binary Tree Level Order Traversal",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/binary-tree-level-order-traversal/",
+          },
+          {
+            name: "Serialize and Deserialize Binary Tree",
+            difficulty: "hard",
+            url: "https://leetcode.com/problems/serialize-and-deserialize-binary-tree/",
+          },
+        ],
+        Tries: [
+          {
+            name: "Implement Trie (Prefix Tree)",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/implement-trie-prefix-tree/",
+          },
+          {
+            name: "Add and Search Word - Data structure design",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/add-and-search-word-data-structure-design/",
+          },
+        ],
+        Graphs: [
+          {
+            name: "Clone Graph",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/clone-graph/",
+          },
+          {
+            name: "Pacific Atlantic Water Flow",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/pacific-atlantic-water-flow/",
+          },
+          {
+            name: "Number of Islands",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/number-of-islands/",
+          },
+          {
+            name: "Longest Consecutive Sequence",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/longest-consecutive-sequence/",
+          },
+          {
+            name: "Alien Dictionary",
+            difficulty: "hard",
+            url: "https://leetcode.com/problems/alien-dictionary/",
+          },
+          {
+            name: "Graph Valid Tree",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/graph-valid-tree/",
+          },
+          {
+            name: "Number of Connected Components in an Undirected Graph",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/number-of-connected-components-in-an-undirected-graph/",
+          },
+        ],
+        "Dynamic Programming": [
+          {
+            name: "Climbing Stairs",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/climbing-stairs/",
+          },
+          {
+            name: "Coin Change",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/coin-change/",
+          },
+          {
+            name: "Longest Increasing Subsequence",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/longest-increasing-subsequence/",
+          },
+          {
+            name: "Word Break",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/word-break/",
+          },
+          {
+            name: "Combination Sum IV",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/combination-sum-iv/",
+          },
+          {
+            name: "House Robber",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/house-robber/",
+          },
+          {
+            name: "House Robber II",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/house-robber-ii/",
+          },
+          {
+            name: "Decode Ways",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/decode-ways/",
+          },
+          {
+            name: "Unique Paths",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/unique-paths/",
+          },
+          {
+            name: "Jump Game",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/jump-game/",
+          },
+          {
+            name: "Palindromic Substrings",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/palindromic-substrings/",
+          },
+          {
+            name: "Longest Common Subsequence",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/longest-common-subsequence/",
+          },
+          {
+            name: "Maximum Product Subarray",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/maximum-product-subarray/",
+          },
+        ],
+        Backtracking: [
+          {
+            name: "Subsets",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/subsets/",
+          },
+          {
+            name: "Combination Sum",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/combination-sum/",
+          },
+          {
+            name: "Permutations",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/permutations/",
+          },
+          {
+            name: "Palindromic Partitioning",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/palindrome-partitioning/",
+          },
+        ],
+        "Heap / Priority Queue": [
+          {
+            name: "Kth Largest Element in an Array",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/kth-largest-element-in-an-array/",
+          },
+          {
+            name: "Find Median from Data Stream",
+            difficulty: "hard",
+            url: "https://leetcode.com/problems/find-median-from-data-stream/",
+          },
+        ],
+        Intervals: [
+          {
+            name: "Merge Intervals",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/merge-intervals/",
+          },
+          {
+            name: "Non-overlapping Intervals",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/non-overlapping-intervals/",
+          },
+        ],
+        Greedy: [
+          {
+            name: "Maximum Subarray",
+            difficulty: "easy",
+            url: "https://leetcode.com/problems/maximum-subarray/",
+          },
+          {
+            name: "Jump Game",
+            difficulty: "medium",
+            url: "https://leetcode.com/problems/jump-game/",
+          },
+        ],
+      };
+
+      let questionStates = {}; // Stores { 'Topic Name': { 'Question Name': true/false } }
+      let topicExpandedStates = {}; // Stores { 'Topic Name': true/false }
+
+      function initializeStates() {
+        // Initialize questionStates from localStorage or default to all selected
+        const savedQuestionStates = localStorage.getItem("questionStates");
+        if (savedQuestionStates) {
+          questionStates = JSON.parse(savedQuestionStates);
+        } else {
+          for (const topic in blind75Questions) {
+            questionStates[topic] = {};
+            blind75Questions[topic].forEach((question) => {
+              questionStates[topic][question.name] = true; // Default to selected
+            });
+          }
+        }
+
+        // Initialize topicExpandedStates from localStorage or default to expanded
+        const savedTopicExpandedStates = localStorage.getItem(
+          "topicExpandedStates"
+        );
+        if (savedTopicExpandedStates) {
+          topicExpandedStates = JSON.parse(savedTopicExpandedStates);
+        } else {
+          for (const topic in blind75Questions) {
+            topicExpandedStates[topic] = true; // Default to expanded
+          }
+        }
+        renderTopics(); // Render initial state
+      }
+
+      function saveState() {
+        localStorage.setItem("questionStates", JSON.stringify(questionStates));
+        localStorage.setItem(
+          "topicExpandedStates",
+          JSON.stringify(topicExpandedStates)
+        );
+      }
+
+      function toggleQuestion(topic, questionName) {
+        questionStates[topic][questionName] =
+          !questionStates[topic][questionName];
+        saveState();
+        updateStats(); // Update stats immediately
+        renderTopics(); // Re-render to reflect selection state in the list
+      }
+
+      function toggleTopicExpansion(topic) {
+        topicExpandedStates[topic] = !topicExpandedStates[topic];
+        saveState();
+        renderTopics(); // Re-render to reflect expansion state
+      }
+
+      function selectAll() {
+        for (const topic in questionStates) {
+          for (const question in questionStates[topic]) {
+            questionStates[topic][question] = true;
+          }
+        }
+        saveState();
+        renderTopics(); // Re-render to reflect changes
+      }
+
+      function deselectAll() {
+        for (const topic in questionStates) {
+          for (const question in questionStates[topic]) {
+            questionStates[topic][question] = false;
+          }
+        }
+        saveState();
+        renderTopics(); // Re-render to reflect changes
+      }
+
+      function filterByDifficulty(difficulty) {
+        for (const topic in blind75Questions) {
+          blind75Questions[topic].forEach((question) => {
+            if (
+              question.difficulty.toLowerCase() === difficulty.toLowerCase()
+            ) {
+              questionStates[topic][question.name] = true; // Select
+            } else {
+              questionStates[topic][question.name] = false; // Deselect
+            }
+          });
+        }
+        saveState();
+        renderTopics();
+      }
+
+      function clearDifficultyFilter() {
+        selectAll(); // Simply re-select all questions
+      }
+
+      function getRandomQuestion() {
+        const selectedQuestions = [];
+        for (const topic in questionStates) {
+          for (const questionName in questionStates[topic]) {
+            if (questionStates[topic][questionName]) {
+              // Find the full question object from blind75Questions
+              const question = blind75Questions[topic].find(
+                (q) => q.name === questionName
+              );
+              if (question) {
+                selectedQuestions.push(question);
+              }
+            }
+          }
+        }
+
+        const resultDiv = document.getElementById("result");
+        if (selectedQuestions.length === 0) {
+          resultDiv.innerHTML =
+            "<h2>No questions selected!</h2><p>Please select some questions first.</p>";
+          resultDiv.style.background =
+            "linear-gradient(135deg, #f5576c 0%, #ff6b6b 100%)";
+          resultDiv.style.boxShadow = "0 8px 25px rgba(245, 87, 108, 0.3)";
+          return;
+        }
+
+        const randomIndex = Math.floor(
+          Math.random() * selectedQuestions.length
+        );
+        const randomQuestion = selectedQuestions[randomIndex];
+
+        // Store the generated question's topic and name for the checkbox
+        resultDiv.dataset.generatedTopic = Object.keys(blind75Questions).find(
+          (topic) =>
+            blind75Questions[topic].some((q) => q.name === randomQuestion.name)
+        );
+        resultDiv.dataset.generatedQuestionName = randomQuestion.name;
+
+        resultDiv.innerHTML = `
+          <h2>
+            <input type="checkbox" id="generatedQuestionCheckbox" onchange="deselectGeneratedQuestion()" checked>
+            ${randomQuestion.name}
+          </h2>
+          <p>Difficulty: <span class="difficulty ${randomQuestion.difficulty.toLowerCase()}">${
+          randomQuestion.difficulty
+        }</span></p>
+          <p><a href="${
+            randomQuestion.url
+          }" target="_blank" style="color: white; text-decoration: underline;">View on LeetCode</a></p>
+        `;
+        resultDiv.style.background =
+          "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"; // Reset to default
+        resultDiv.style.boxShadow = "0 8px 25px rgba(240, 147, 251, 0.3)"; // Reset to default
+      }
+
+      function deselectGeneratedQuestion() {
+        const resultDiv = document.getElementById("result");
+        const topic = resultDiv.dataset.generatedTopic;
+        const questionName = resultDiv.dataset.generatedQuestionName;
+
+        if (topic && questionName) {
+          questionStates[topic][questionName] = false; // Deselect the question
+          saveState();
+          updateStats();
+          renderTopics(); // Re-render the list to show the deselected state
+          // Also update the checkbox state in the result section
+          document.getElementById("generatedQuestionCheckbox").checked = false;
+        }
+      }
+
+      function updateStats() {
+        let totalSelected = 0;
+        let totalAvailable = 0;
+
+        for (const topic in blind75Questions) {
+          blind75Questions[topic].forEach((question) => {
+            totalAvailable++;
+            if (questionStates[topic] && questionStates[topic][question.name]) {
+              totalSelected++;
+            }
+          });
+        }
+        document.getElementById(
+          "stats"
+        ).textContent = `${totalSelected} questions selected out of ${totalAvailable} total`;
+      }
+
+      function renderTopics() {
+        const query = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const topicsContainer = document.getElementById("topics");
+        topicsContainer.innerHTML = ""; // Clear existing content
+
+        for (const topic in blind75Questions) {
+          const filteredQuestions = blind75Questions[topic].filter((q) =>
+            q.name.toLowerCase().includes(query)
+          );
+
+          if (filteredQuestions.length === 0 && query !== "") {
+            // If searching and no questions in this topic match, skip
+            continue;
+          }
+
+          const topicSection = document.createElement("div");
+          topicSection.className = "topic-section";
+
+          const isExpanded = topicExpandedStates[topic];
+          const chevronClass = isExpanded ? "rotated" : "";
+
+          const topicHeader = document.createElement("div");
+          topicHeader.className = "topic-header";
+          topicHeader.onclick = () => toggleTopicExpansion(topic);
+          topicHeader.innerHTML = `
+            <h3>${topic}</h3>
+            <div class="topic-toggle">
+              <svg class="topic-chevron ${chevronClass}" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+          `;
+          topicSection.appendChild(topicHeader);
+
+          const topicContent = document.createElement("div");
+          topicContent.className = `topic-content ${
+            isExpanded ? "expanded" : ""
+          }`;
+
+          const questionsGrid = document.createElement("div");
+          questionsGrid.className = "questions-grid";
+
+          // If searching, display filtered questions; otherwise, display all for the topic
+          const questionsToDisplay =
+            query === "" ? blind75Questions[topic] : filteredQuestions;
+
+          questionsToDisplay.forEach((question) => {
+            const isSelected =
+              questionStates[topic] && questionStates[topic][question.name];
+            const itemClass = isSelected ? "" : "disabled";
+
+            const questionItem = document.createElement("div");
+            questionItem.className = `question-item ${itemClass}`;
+            questionItem.onclick = (event) => {
+              // Prevent toggling when clicking directly on the checkbox
+              if (event.target.type !== "checkbox") {
+                toggleQuestion(topic, question.name);
+              }
+            };
+
+            questionItem.innerHTML = `
+              <input type="checkbox" ${
+                isSelected ? "checked" : ""
+              } onchange="toggleQuestion('${topic}', '${question.name}')">
+              <span class="question-name">${question.name}</span>
+              <span class="difficulty ${question.difficulty.toLowerCase()}">${
+              question.difficulty
+            }</span>
+            `;
+            questionsGrid.appendChild(questionItem);
+          });
+
+          topicContent.appendChild(questionsGrid);
+          topicSection.appendChild(topicContent);
+          topicsContainer.appendChild(topicSection);
+        }
+        updateStats(); // Always update stats after rendering topics
+      }
+
+      // Initialize states and render topics when the page loads
+      initializeStates();
+    </script>
+  </body>
+</html>
