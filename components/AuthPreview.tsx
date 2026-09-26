@@ -2,20 +2,20 @@
  * A static render of the real thing, using the app's own classes so it can't
  * drift into being a flattering lie about what you get.
  */
-import { Flame, Lock, Star } from "./icons";
+import { Check, Flame, Lock, Star } from "./icons";
 
 const ROWS: Array<{
   name: string;
   difficulty: "Easy" | "Medium" | "Hard";
   solved?: boolean;
-  due?: string;
+  rating?: "solid" | "struggled";
   premium?: boolean;
   starred?: boolean;
 }> = [
-  { name: "Number of Islands", difficulty: "Medium", solved: true },
-  { name: "Clone Graph", difficulty: "Medium", due: "due today" },
+  { name: "Number of Islands", difficulty: "Medium", solved: true, rating: "solid" },
+  { name: "Clone Graph", difficulty: "Medium", solved: true, rating: "struggled" },
   { name: "Pacific Atlantic Water Flow", difficulty: "Medium", starred: true },
-  { name: "Course Schedule", difficulty: "Medium", solved: true },
+  { name: "Course Schedule", difficulty: "Medium" },
   { name: "Graph Valid Tree", difficulty: "Medium", premium: true },
   { name: "Word Ladder", difficulty: "Hard" },
 ];
@@ -28,16 +28,35 @@ export default function AuthPreview() {
           <div className="today-head">
             <span className="section-label">Today</span>
             <div className="today-stats">
-              <span className="pill hot">4 due for review</span>
+              <span className="pill hot">3 topics due</span>
               <span className="pill">
                 <Flame /> 12 days
               </span>
+              <span className="pill mono">1/2 today</span>
             </div>
           </div>
+          <ol className="plan">
+            <li>
+              <span className="plan-item done">
+                <span className="plan-check on"><Check /></span>
+                <span className="plan-kind new">New</span>
+                <span className="plan-name">Course Schedule</span>
+                <span className="plan-topic">Graphs</span>
+              </span>
+            </li>
+            <li>
+              <span className="plan-item active">
+                <span className="plan-check" />
+                <span className="plan-kind review">Review</span>
+                <span className="plan-name">Clone Graph</span>
+                <span className="plan-topic">Graphs</span>
+              </span>
+            </li>
+          </ol>
           <div className="today-body">
             <div className="focus-problem">
-              <span className="focus-reason">Due for review</span>
-              <span className="focus-name">Course Schedule</span>
+              <span className="focus-reason">Review · Graphs · today</span>
+              <span className="focus-name">Clone Graph</span>
               <div className="focus-meta">
                 <span className="difficulty medium">Medium</span>
                 <span>Graphs</span>
@@ -58,12 +77,13 @@ export default function AuthPreview() {
             <span />
             <div className="topic-title">
               <h2>Graphs</h2>
+              <span className="row-meta due">review today</span>
             </div>
             <div className="topic-progress">
               <div className="bar accent">
                 <i style={{ width: "33%" }} />
               </div>
-              <span className="topic-count mono">2/6</span>
+              <span className="topic-count mono">3/6</span>
             </div>
           </div>
           <div className="topic-body">
@@ -71,7 +91,7 @@ export default function AuthPreview() {
               {ROWS.map((r) => (
                 <li
                   key={r.name}
-                  className={`row${r.solved ? " is-solved" : ""}${r.due ? " is-due" : ""}`}
+                  className={`row${r.solved ? " is-solved" : ""}`}
                 >
                   <span className={`status-btn${r.solved ? " solved" : ""}`} />
                   <span className="row-name">
@@ -82,7 +102,9 @@ export default function AuthPreview() {
                       </span>
                     )}
                   </span>
-                  <span className={`row-meta${r.due ? " due" : ""}`}>{r.due ?? ""}</span>
+                  <span className={`row-meta${r.rating === "struggled" ? " overdue" : ""}`}>
+                    {r.rating ?? ""}
+                  </span>
                   <span className={`difficulty ${r.difficulty.toLowerCase()}`}>
                     {r.difficulty}
                   </span>

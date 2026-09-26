@@ -10,9 +10,10 @@ import {
   PROBLEM_BY_ID, TOPICS, problemsInList,
   type Difficulty, type ListId, type Problem,
 } from "@/lib/catalog";
-import { isDue } from "@/lib/srs";
-import { attemptsByDay, currentStreak, localDay, topicStats, weakestTopics } from "@/lib/stats";
-import type { Rating } from "@/lib/types";
+import { topicSchedules } from "@/lib/srs";
+import { buildPlan, type PlanItem } from "@/lib/plan";
+import { attemptsByDay, currentStreak, topicStats } from "@/lib/stats";
+import type { AttemptRow, Rating } from "@/lib/types";
 import { RATING_LABELS } from "@/lib/types";
 import { useStudy } from "@/hooks/useStudy";
 import { useMounted } from "@/hooks/useMounted";
@@ -34,6 +35,8 @@ interface Props {
 
 const DIFFICULTIES: Difficulty[] = ["Easy", "Medium", "Hard"];
 
+const topicOf = (problemId: string) => PROBLEM_BY_ID[problemId]?.topic;
+
 export default function StudyApp({ userId, initial }: Props) {
   const store = useMemo(
     () => (userId ? new CloudStore(createClient(), userId) : new LocalStore()),
@@ -44,7 +47,7 @@ export default function StudyApp({ userId, initial }: Props) {
 
   // Until hydration completes, nothing counts as due: the server's UTC "today"
   // and the browser's local one can disagree, and every due-derived value
-  // (the focus problem, the due count, the per-row label) would mismatch.
+  // (today's plan, the due count, the topic labels) would mismatch.
   const mounted = useMounted();
   const dueDay = mounted ? today : null;
   const [dismissedGuestNote, setDismissedGuestNote] = useState(false);
@@ -55,7 +58,9 @@ export default function StudyApp({ userId, initial }: Props) {
   const [openProblemId, setOpenProblemId] = useState<string | null>(null);
   const [showStats, setShowStats] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [focusIndex, setFocusIndex] = useState(0);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [skipped, setSkipped] = useState<Set<string>>(new Set());
+  const [extra, setExtra] = useState(0);
   const [override, setOverride] = useState<FocusItem | null>(null);
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [elapsed, setElapsed] = useState(0);
@@ -176,16 +181,15 @@ export default function StudyApp({ userId, initial }: Props) {
   );
 
   const statusCounts = useMemo(() => {
-    let todo = 0, solved = 0, starred = 0, due = 0;
+    let todo = 0, solved = 0, starred = 0;
     for (const p of listProblems) {
       const r = progress.get(p.id);
       if (r?.status === "solved") solved += 1;
       else todo += 1;
       if (r?.starred) starred += 1;
-      if (dueDay && r && isDue(r.due_on, dueDay)) due += 1;
     }
-    return { all: listProblems.length, todo, solved, starred, due } as Record<StatusFilter, number>;
-  }, [listProblems, progress, dueDay]);
+    return { all: listProblems.length, todo, solved, starred } as Record<StatusFilter, number>;
+  }, [listProblems, progress]);
 
   const matches = useCallback(
     (p: Problem) => {
@@ -201,11 +205,10 @@ export default function StudyApp({ userId, initial }: Props) {
         case "todo": return r?.status !== "solved";
         case "solved": return r?.status === "solved";
         case "starred": return r?.starred === true;
-        case "due": return dueDay && r ? isDue(r.due_on, dueDay) : false;
         default: return true;
       }
     },
-    [difficulties, query, status, progress, dueDay],
+    [difficulties, query, status, progress],
   );
 
   const visible = useMemo(() => listProblems.filter(matches), [listProblems, matches]);
@@ -219,38 +222,69 @@ export default function StudyApp({ userId, initial }: Props) {
     }));
   }, [visible]);
 
-  /* ------------------------------------------------------ today's queue */
-  const queue = useMemo<FocusItem[]>(() => {
-    const weakNames = new Set(weakestTopics(allTopicStats, 3).map((t) => t.topic));
-    const due: Array<FocusItem & { dueOn: string }> = [];
-    const flagged: FocusItem[] = [];
-    const weak: FocusItem[] = [];
-    const rest: FocusItem[] = [];
+  /* ------------------------------------------------------- today's plan */
+  const schedules = useMemo(() => topicSchedules(attempts, topicOf), [attempts]);
 
-    for (const p of listProblems) {
-      const r = progress.get(p.id);
-      if (dueDay && r && isDue(r.due_on, dueDay)) {
-        due.push({ problem: p, reason: "Due for review", dueOn: r.due_on! });
-        continue;
-      }
-      if (r?.status === "solved") continue;
-      if (r?.starred) { flagged.push({ problem: p, reason: "Flagged for review" }); continue; }
-      if (weakNames.has(p.topic)) { weak.push({ problem: p, reason: `Weakest topic · ${p.topic}` }); continue; }
-      rest.push({ problem: p, reason: "Next unsolved" });
-    }
+  const planFor = useCallback(
+    (slotsPastGoal: number) =>
+      dueDay
+        ? buildPlan({
+            problems: listProblems,
+            progress,
+            attempts,
+            schedules,
+            topicStats: allTopicStats,
+            today: dueDay,
+            goal: settings.daily_goal,
+            extra: slotsPastGoal,
+            skipped,
+          })
+        : { items: [], dueTopics: [] },
+    [dueDay, listProblems, progress, attempts, schedules, allTopicStats, settings.daily_goal, skipped],
+  );
 
-    due.sort((a, b) => a.dueOn.localeCompare(b.dueOn)); // most overdue first
-    return [...due.map(({ problem, reason }) => ({ problem, reason })), ...flagged, ...weak, ...rest];
-  }, [listProblems, progress, dueDay, allTopicStats]);
+  const plan = useMemo(() => planFor(extra), [planFor, extra]);
+  const pending = plan.items.filter((i) => !i.done);
+  const canExtend = useMemo(
+    () => pending.length === 0 && planFor(extra + 1).items.some((i) => !i.done),
+    [pending.length, planFor, extra],
+  );
 
-  const focus = override ?? queue[focusIndex % Math.max(queue.length, 1)] ?? null;
+  const focus: FocusItem | null =
+    override ?? pending.find((i) => i.problem.id === selectedId) ?? pending[0] ?? null;
+
+  /** How many days the problem's topic would wait after this rating. */
+  const intervalAfter = useCallback(
+    (problemId: string, rating: Rating) => {
+      const topic = topicOf(problemId);
+      if (!topic) return null;
+      const hypothetical: AttemptRow = {
+        id: 0,
+        user_id: "",
+        problem_id: problemId,
+        rating,
+        duration_seconds: null,
+        attempted_at: new Date().toISOString(),
+      };
+      const inTopic = attempts.filter((a) => topicOf(a.problem_id) === topic);
+      return topicSchedules([...inTopic, hypothetical], topicOf).get(topic)?.intervalDays ?? null;
+    },
+    [attempts],
+  );
+
+  const hintsFor = useCallback(
+    (problemId: string) =>
+      Object.fromEntries(
+        (["solid", "shaky", "struggled"] as const).map((r) => {
+          const days = intervalAfter(problemId, r);
+          return [r, days === null ? "" : `topic back in ${days}d`];
+        }),
+      ) as Record<Rating, string>,
+    [intervalAfter],
+  );
 
   const byDay = useMemo(() => attemptsByDay(attempts), [attempts]);
   const streak = useMemo(() => currentStreak(byDay), [byDay]);
-  const solvedToday = useMemo(
-    () => attempts.filter((a) => localDay(a.attempted_at) === today).length,
-    [attempts, today],
-  );
 
   /* ------------------------------------------------------------ actions */
   const jumpToTopic = useCallback((topic: string) => {
@@ -276,16 +310,19 @@ export default function StudyApp({ userId, initial }: Props) {
 
   const handleRate = useCallback(
     async (problemId: string, rating: Rating) => {
-      const schedule = await study.rate(problemId, rating, elapsed > 0 ? elapsed : null);
-      const name = PROBLEM_BY_ID[problemId]?.name ?? "Problem";
+      const days = intervalAfter(problemId, rating);
+      await study.rate(problemId, rating, elapsed > 0 ? elapsed : null);
+      const problem = PROBLEM_BY_ID[problemId];
       study.pushToast({
-        message: `${name} — ${RATING_LABELS[rating]}. Back in ${schedule.intervalDays} days.`,
+        message: `${problem?.name ?? "Problem"} — ${RATING_LABELS[rating]}.${
+          problem && days !== null ? ` ${problem.topic} back in ${days} days.` : ""
+        }`,
       });
       setOverride(null);
       setElapsed(0);
-      if (focus?.problem.id === problemId) setFocusIndex((i) => i + 1);
+      setSelectedId(null);
     },
-    [study, elapsed, focus],
+    [study, elapsed, intervalAfter],
   );
 
   const handleToggleSolved = useCallback(
@@ -293,7 +330,7 @@ export default function StudyApp({ userId, initial }: Props) {
       study.setSolved(problemId, solved);
       if (solved) {
         // Nudge toward a rating without forcing a modal -- an unrated solve
-        // never enters the review queue.
+        // doesn't count toward today or the topic's schedule.
         study.pushToast(
           {
             message: `${PROBLEM_BY_ID[problemId]?.name ?? "Solved"} — how did it go?`,
@@ -397,7 +434,7 @@ export default function StudyApp({ userId, initial }: Props) {
     <>
       <TopBar
         list={list}
-        onListChange={(l) => { study.setList(l); setFocusIndex(0); setOverride(null); }}
+        onListChange={(l) => { study.setList(l); setSelectedId(null); setOverride(null); }}
         counts={counts}
         query={query}
         onQueryChange={setQuery}
@@ -440,15 +477,24 @@ export default function StudyApp({ userId, initial }: Props) {
           )}
 
           <TodayPanel
+            plan={plan.items}
             focus={focus}
-            queueLength={queue.length}
-            dueCount={statusCounts.due}
+            dueTopicCount={plan.dueTopics.length}
             streak={streak}
-            solvedToday={solvedToday}
             dailyGoal={settings.daily_goal}
             timerMinutes={settings.timer_minutes}
             row={focus ? rowFor(focus.problem.id) : null}
-            onSkip={() => { setOverride(null); setFocusIndex((i) => i + 1); }}
+            hints={focus ? hintsFor(focus.problem.id) : null}
+            canExtend={canExtend}
+            onSelect={(item: PlanItem) => { setOverride(null); setSelectedId(item.problem.id); }}
+            onSkip={() => {
+              if (override) { setOverride(null); return; }
+              if (!focus) return;
+              const id = focus.problem.id;
+              setSkipped((prev) => new Set(prev).add(id));
+              setSelectedId(null);
+            }}
+            onMore={() => setExtra((n) => n + 1)}
             onOpen={setOpenProblemId}
             onRate={(rating) => focus && void handleRate(focus.problem.id, rating)}
             onElapsedChange={setElapsed}
@@ -499,6 +545,7 @@ export default function StudyApp({ userId, initial }: Props) {
                     solved={stat?.solved ?? 0}
                     open={searching || !collapsed.has(topic)}
                     today={dueDay}
+                    schedule={schedules.get(topic) ?? null}
                     rowFor={rowFor}
                     onToggleOpen={() =>
                       setCollapsed((prev) => {
@@ -522,6 +569,8 @@ export default function StudyApp({ userId, initial }: Props) {
         <ProblemDrawer
           problem={openProblem}
           row={rowFor(openProblem.id)}
+          hints={hintsFor(openProblem.id)}
+          topicSchedule={schedules.get(openProblem.topic) ?? null}
           attempts={attempts.filter((a) => a.problem_id === openProblem.id)}
           onClose={() => setOpenProblemId(null)}
           onToggleSolved={(s) => handleToggleSolved(openProblem.id, s)}

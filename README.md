@@ -86,20 +86,30 @@ how that version worked.
 
 ## How the review scheduling works
 
-Rate a problem after solving it and the rating decides when it comes back:
+A problem takes ~30 minutes, so scheduling every problem individually builds a
+backlog no one can clear. Reviews are scheduled per **topic** instead, and any
+problem in the topic counts as reviewing it. Rate a solve and the rating
+decides when its topic comes back:
 
-| Rating      | Next review | Effect on streak        |
-| ----------- | ----------- | ----------------------- |
-| Solid       | ~14 days    | Streak +1, interval ×1.8 each consecutive solid (capped at 180 days) |
-| Shaky       | 5 days      | Streak held             |
-| Struggled   | 2 days      | Streak reset            |
+| Rating      | Topic returns | Effect on streak        |
+| ----------- | ------------- | ----------------------- |
+| Solid       | ~7 days       | Streak +1, interval ×1.8 each consecutive solid day (capped at 90 days) |
+| Shaky       | 4 days        | Streak held             |
+| Struggled   | 2 days        | Streak reset            |
 
-Anything due today surfaces in the **Today** panel, most overdue first. After
-the due queue it falls back to flagged problems, then unsolved problems in your
-weakest topics, then everything else.
+Several solves in one topic on the same day count once, at the worst rating.
+The schedule is replayed from the attempt log, so it's never stored and can't
+drift.
 
-Marking a problem solved without rating it *doesn't* schedule a review — that's
-what the rating prompt in the toast is for.
+The **Today** panel is a fixed plan sized by the daily goal (default 2): one
+new problem first — flagged, then weakest topic, then catalog order — then
+reviews of the most overdue topics. A review picks a problem you struggled with,
+then a flagged one, then an unsolved one, then whichever you've gone longest
+without. Due topics past the cap wait for another day; "One more" goes past the
+goal on request.
+
+Marking a problem solved without rating it *doesn't* count — that's what the
+rating prompt in the toast is for.
 
 ---
 

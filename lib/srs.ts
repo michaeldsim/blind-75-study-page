@@ -1,22 +1,26 @@
 /**
- * Spaced repetition.
+ * Spaced repetition, scheduled per topic rather than per problem.
  *
- * Deliberately simple: one rating after each solve decides when the problem
- * comes back. Repeated successes stretch the interval, a struggle collapses
- * it. No half-life math to tune, and the next date is always explainable in
- * a sentence -- which matters, because an opaque schedule is one you stop
- * trusting and then stop using.
+ * A LeetCode problem costs ~30 minutes, so a per-problem queue outgrows any
+ * realistic day. What interviews test is recognising the pattern, and any
+ * problem in a topic exercises that -- so the topic is what gets scheduled,
+ * and the planner picks which problem to use for the review.
+ *
+ * The schedule is replayed from the attempt log rather than stored, so it
+ * can't drift and it applies retroactively to existing history.
  */
-import type { Rating } from "./types";
+import type { AttemptRow, Rating } from "./types";
 
 const BASE_DAYS: Record<Rating, number> = {
   struggled: 2,
-  shaky: 5,
-  solid: 14,
+  shaky: 4,
+  solid: 7,
 };
 
-const GROWTH = 1.8; // applied per consecutive 'solid'
-const MAX_DAYS = 180;
+const GROWTH = 1.8; // applied per consecutive 'solid' day
+const MAX_DAYS = 90;
+
+const SEVERITY: Record<Rating, number> = { solid: 0, shaky: 1, struggled: 2 };
 
 export function todayISO(now: Date = new Date()): string {
   // Local date, not UTC -- "due today" should mean the user's today.
@@ -75,6 +79,48 @@ export function nextSchedule(
   }
 
   return { dueOn: addDays(from, interval), solidStreak: streak, intervalDays: interval };
+}
+
+export interface TopicSchedule extends Schedule {
+  topic: string;
+  lastDay: string;
+  lastRating: Rating;
+}
+
+/**
+ * Replays the attempt log into one schedule per topic. Several solves in the
+ * same topic on the same day count once, at the worst rating -- otherwise two
+ * easy wins in an afternoon would compound the interval twice.
+ */
+export function topicSchedules(
+  attempts: AttemptRow[],
+  topicOf: (problemId: string) => string | undefined,
+): Map<string, TopicSchedule> {
+  // topic -> day -> worst rating that day
+  const days = new Map<string, Map<string, Rating>>();
+  for (const a of attempts) {
+    const topic = topicOf(a.problem_id);
+    if (!topic) continue;
+    const day = todayISO(new Date(a.attempted_at));
+    const byDay = days.get(topic) ?? new Map<string, Rating>();
+    const prev = byDay.get(day);
+    if (!prev || SEVERITY[a.rating] > SEVERITY[prev]) byDay.set(day, a.rating);
+    days.set(topic, byDay);
+  }
+
+  const out = new Map<string, TopicSchedule>();
+  for (const [topic, byDay] of days) {
+    let streak = 0;
+    let last: TopicSchedule | null = null;
+    for (const day of [...byDay.keys()].sort()) {
+      const rating = byDay.get(day)!;
+      const s = nextSchedule(rating, streak, day);
+      streak = s.solidStreak;
+      last = { ...s, topic, lastDay: day, lastRating: rating };
+    }
+    if (last) out.set(topic, last);
+  }
+  return out;
 }
 
 export function isDue(dueOn: string | null, today: string = todayISO()): boolean {

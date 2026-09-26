@@ -127,7 +127,7 @@ export default function SettingsModal({
               </label>
               <label style={{ fontSize: 13 }}>
                 <div style={{ color: "var(--text-muted)", marginBottom: 6 }}>
-                  Daily goal (problems)
+                  Daily goal (1 new + reviews)
                 </div>
                 <input
                   type="number"

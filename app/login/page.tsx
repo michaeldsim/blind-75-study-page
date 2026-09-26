@@ -28,8 +28,8 @@ export default async function LoginPage({
         <h1>Stop re-solving the problems you already know.</h1>
         <p className="auth-lede">
           The Blind 75 and NeetCode 150, grouped by pattern. Rate each solve and
-          the ones you fumbled come back on a schedule — the ones you own get
-          out of your way.
+          the patterns you fumble come back on a schedule — the ones you own
+          get out of your way.
         </p>
 
         <ul className="auth-points">
@@ -38,8 +38,9 @@ export default async function LoginPage({
             solving once counts in both lists.
           </li>
           <li>
-            <strong>Spaced repetition.</strong> Struggled comes back in 2 days,
-            shaky in 5, solid in 2 weeks and climbing.
+            <strong>Two problems a day.</strong> One new, one review. Reviews
+            are scheduled per pattern, not per problem: struggle with a topic
+            and it&apos;s back in 2 days, own it and it waits a week and climbing.
           </li>
           <li>
             <strong>Notes, timer, and gaps.</strong> Per-problem notes, an

@@ -2,7 +2,8 @@
 
 import type { Problem } from "@/lib/catalog";
 import type { ProgressRow } from "@/lib/types";
-import { describeDue, isDue } from "@/lib/srs";
+import { RATING_LABELS } from "@/lib/types";
+import { describeDue, isDue, type TopicSchedule } from "@/lib/srs";
 import { Check, ChevronRight, Lock, Star } from "./icons";
 
 interface Props {
@@ -13,6 +14,8 @@ interface Props {
   open: boolean;
   /** null until hydration -- see useMounted. */
   today: string | null;
+  /** null until the topic has a rated attempt. */
+  schedule: TopicSchedule | null;
   rowFor: (id: string) => ProgressRow;
   onToggleOpen: () => void;
   onOpenProblem: (id: string) => void;
@@ -21,10 +24,12 @@ interface Props {
 }
 
 export default function TopicSection({
-  topic, problems, total, solved, open, today, rowFor,
+  topic, problems, total, solved, open, today, schedule, rowFor,
   onToggleOpen, onOpenProblem, onToggleSolved, onToggleStar,
 }: Props) {
   const pct = total === 0 ? 0 : (solved / total) * 100;
+  const due = today !== null && schedule !== null && isDue(schedule.dueOn, today);
+  const overdue = due && today !== null && schedule!.dueOn < today;
 
   return (
     <section className="topic-section" id={`topic-${slug(topic)}`}>
@@ -32,6 +37,11 @@ export default function TopicSection({
         <ChevronRight className={`chevron${open ? " open" : ""}`} />
         <div className="topic-title">
           <h2>{topic}</h2>
+          {schedule && today && (
+            <span className={`row-meta${overdue ? " overdue" : due ? " due" : ""}`}>
+              review {describeDue(schedule.dueOn, today).replace("due ", "")}
+            </span>
+          )}
         </div>
         <div className="topic-progress">
           <div className="bar accent">
@@ -47,13 +57,11 @@ export default function TopicSection({
             {problems.map((p) => {
               const row = rowFor(p.id);
               const isSolved = row.status === "solved";
-              const due = today !== null && isDue(row.due_on, today);
-              const overdue = due && row.due_on !== null && today !== null && row.due_on < today;
 
               return (
                 <li
                   key={p.id}
-                  className={`row${isSolved ? " is-solved" : ""}${due ? " is-due" : ""}`}
+                  className={`row${isSolved ? " is-solved" : ""}`}
                 >
                   <button
                     className={`status-btn${isSolved ? " solved" : ""}`}
@@ -76,8 +84,9 @@ export default function TopicSection({
                     )}
                   </button>
 
-                  <span className={`row-meta${overdue ? " overdue" : due ? " due" : ""}`}>
-                    {row.due_on && today ? describeDue(row.due_on, today) : ""}
+                  {/* Struggled problems are what topic reviews reach for first. */}
+                  <span className={`row-meta${row.last_rating === "struggled" ? " overdue" : ""}`}>
+                    {row.last_rating ? RATING_LABELS[row.last_rating].toLowerCase() : ""}
                   </span>
 
                   <span className={`difficulty ${p.difficulty.toLowerCase()}`}>

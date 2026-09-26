@@ -1,11 +1,11 @@
 "use client";
 
 import type { Problem } from "@/lib/catalog";
+import type { PlanItem } from "@/lib/plan";
 import type { ProgressRow, Rating } from "@/lib/types";
-import { describeDue } from "@/lib/srs";
 import { relativeTime } from "@/lib/stats";
 import { RATING_LABELS } from "@/lib/types";
-import { External, Flame, Star } from "./icons";
+import { Check, External, Flame, Star } from "./icons";
 import Timer from "./Timer";
 
 export interface FocusItem {
@@ -14,46 +14,74 @@ export interface FocusItem {
 }
 
 interface Props {
+  plan: PlanItem[];
   focus: FocusItem | null;
-  queueLength: number;
-  dueCount: number;
+  dueTopicCount: number;
   streak: number;
-  solvedToday: number;
   dailyGoal: number;
   timerMinutes: number;
   row: ProgressRow | null;
+  /** Rating -> "topic back in N days", for the focused problem. */
+  hints: Record<Rating, string> | null;
+  /** Whether "one more" has anything left to offer. */
+  canExtend: boolean;
+  onSelect: (item: PlanItem) => void;
   onSkip: () => void;
+  onMore: () => void;
   onOpen: (id: string) => void;
   onRate: (rating: Rating) => void;
   onElapsedChange: (seconds: number) => void;
 }
 
-const RATING_HINT: Record<Rating, string> = {
-  solid: "back in ~2 weeks",
-  shaky: "back in 5 days",
-  struggled: "back in 2 days",
-};
-
 export default function TodayPanel({
-  focus, queueLength, dueCount, streak, solvedToday, dailyGoal,
-  timerMinutes, row, onSkip, onOpen, onRate, onElapsedChange,
+  plan, focus, dueTopicCount, streak, dailyGoal, timerMinutes, row, hints,
+  canExtend, onSelect, onSkip, onMore, onOpen, onRate, onElapsedChange,
 }: Props) {
+  const doneCount = plan.filter((i) => i.done).length;
+
   return (
     <div className="today">
       <div className="today-head">
         <span className="section-label">Today</span>
         <div className="today-stats">
-          {dueCount > 0 && (
-            <span className="pill hot">{dueCount} due for review</span>
+          {dueTopicCount > 0 && (
+            <span className="pill hot">
+              {dueTopicCount} topic{dueTopicCount === 1 ? "" : "s"} due
+            </span>
           )}
           <span className="pill">
             <Flame /> {streak} day{streak === 1 ? "" : "s"}
           </span>
           <span className="pill mono">
-            {solvedToday}/{dailyGoal} today
+            {doneCount}/{dailyGoal} today
           </span>
         </div>
       </div>
+
+      {plan.length > 0 && (
+        <ol className="plan">
+          {plan.map((item) => {
+            const active = !item.done && focus?.problem.id === item.problem.id;
+            return (
+              <li key={item.problem.id}>
+                <button
+                  className={`plan-item${item.done ? " done" : ""}${active ? " active" : ""}`}
+                  onClick={() => (item.done ? onOpen(item.problem.id) : onSelect(item))}
+                >
+                  <span className={`plan-check${item.done ? " on" : ""}`}>
+                    {item.done && <Check />}
+                  </span>
+                  <span className={`plan-kind ${item.kind}`}>
+                    {item.kind === "new" ? "New" : "Review"}
+                  </span>
+                  <span className="plan-name">{item.problem.name}</span>
+                  <span className="plan-topic">{item.problem.topic}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      )}
 
       {focus ? (
         <div className="today-body">
@@ -71,7 +99,6 @@ export default function TodayPanel({
                   {relativeTime(row.last_attempt_at)}
                 </span>
               )}
-              {row?.due_on && <span>{describeDue(row.due_on)}</span>}
               {row?.starred && <span title="Flagged"><Star size={12} filled /></span>}
             </div>
           </div>
@@ -93,20 +120,20 @@ export default function TodayPanel({
             <button className="btn" onClick={() => onOpen(focus.problem.id)}>
               Notes
             </button>
-            <button className="btn btn-ghost" onClick={onSkip} disabled={queueLength <= 1}>
+            <button className="btn btn-ghost" onClick={onSkip} title="Pick a different problem">
               Skip
             </button>
           </div>
 
           <div style={{ marginTop: 18 }}>
             <span className="section-label" style={{ display: "block", marginBottom: 9 }}>
-              Done? Rate it — that sets the next review
+              Done? Rate it — that sets when the topic comes back
             </span>
             <div className="rating-group">
               {(Object.keys(RATING_LABELS) as Rating[]).map((r) => (
                 <button key={r} className={`rating-btn ${r}`} onClick={() => onRate(r)}>
                   <strong>{RATING_LABELS[r]}</strong>
-                  <span>{RATING_HINT[r]}</span>
+                  {hints && <span>{hints[r]}</span>}
                 </button>
               ))}
             </div>
@@ -115,12 +142,18 @@ export default function TodayPanel({
       ) : (
         <div className="today-empty">
           <strong style={{ color: "var(--text)", fontSize: 15 }}>
-            Nothing queued up
+            {doneCount > 0 ? "Done for today" : "Nothing queued up"}
           </strong>
           <span>
-            Every problem in this list is solved and none are due for review.
-            Switch lists or clear a filter to keep going.
+            {canExtend
+              ? "That's the plan finished. Stop here, or take one more."
+              : "Every problem in this list is solved and no topics are due."}
           </span>
+          {canExtend && (
+            <button className="btn" onClick={onMore} style={{ marginTop: 8 }}>
+              One more
+            </button>
+          )}
         </div>
       )}
     </div>

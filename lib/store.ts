@@ -40,7 +40,7 @@ export function defaultSettings(userId: string): SettingsRow {
     user_id: userId,
     active_list: "blind75",
     theme: "system",
-    daily_goal: 3,
+    daily_goal: 2,
     timer_minutes: 35,
     updated_at: new Date().toISOString(),
   };

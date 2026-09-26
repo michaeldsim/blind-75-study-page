@@ -4,13 +4,16 @@ import { useEffect, useRef, useState } from "react";
 import type { Problem } from "@/lib/catalog";
 import type { AttemptRow, ProgressRow, Rating } from "@/lib/types";
 import { RATING_LABELS } from "@/lib/types";
-import { describeDue } from "@/lib/srs";
+import { describeDue, type TopicSchedule } from "@/lib/srs";
 import { formatDuration, relativeTime } from "@/lib/stats";
 import { Check, Close, External, Lock, Star } from "./icons";
 
 interface Props {
   problem: Problem;
   row: ProgressRow;
+  /** Rating -> "topic back in N days". */
+  hints: Record<Rating, string>;
+  topicSchedule: TopicSchedule | null;
   attempts: AttemptRow[];
   onClose: () => void;
   onToggleSolved: (solved: boolean) => void;
@@ -20,14 +23,8 @@ interface Props {
   onRate: (rating: Rating) => void;
 }
 
-const RATING_HINT: Record<Rating, string> = {
-  solid: "~2 weeks",
-  shaky: "5 days",
-  struggled: "2 days",
-};
-
 export default function ProblemDrawer({
-  problem, row, attempts, onClose, onToggleSolved, onToggleStar,
+  problem, row, hints, topicSchedule, attempts, onClose, onToggleSolved, onToggleStar,
   onNotesChange, onNotesFlush, onRate,
 }: Props) {
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved">("idle");
@@ -120,14 +117,15 @@ export default function ProblemDrawer({
               {(Object.keys(RATING_LABELS) as Rating[]).map((r) => (
                 <button key={r} className={`rating-btn ${r}`} onClick={() => onRate(r)}>
                   <strong>{RATING_LABELS[r]}</strong>
-                  <span>{RATING_HINT[r]}</span>
+                  <span>{hints[r]}</span>
                 </button>
               ))}
             </div>
-            {row.due_on && (
+            {topicSchedule && (
               <p style={{ marginTop: 9, fontSize: 12, color: "var(--text-muted)" }}>
-                Currently {describeDue(row.due_on)}
-                {row.solid_streak > 0 && ` · ${row.solid_streak} solid in a row`}
+                {problem.topic} review {describeDue(topicSchedule.dueOn).replace("due ", "")}
+                {topicSchedule.solidStreak > 0 &&
+                  ` · ${topicSchedule.solidStreak} solid in a row`}
               </p>
             )}
           </div>

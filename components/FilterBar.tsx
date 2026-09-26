@@ -3,7 +3,7 @@
 import type { Difficulty } from "@/lib/catalog";
 import { Collapse, Expand, Shuffle } from "./icons";
 
-export type StatusFilter = "all" | "todo" | "solved" | "starred" | "due";
+export type StatusFilter = "all" | "todo" | "solved" | "starred";
 
 interface Props {
   status: StatusFilter;
@@ -22,7 +22,6 @@ const STATUS: Array<{ id: StatusFilter; label: string }> = [
   { id: "todo", label: "Unsolved" },
   { id: "solved", label: "Solved" },
   { id: "starred", label: "Flagged" },
-  { id: "due", label: "Due" },
 ];
 
 const DIFFS: Difficulty[] = ["Easy", "Medium", "Hard"];

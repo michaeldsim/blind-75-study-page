@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
-import { nextSchedule, todayISO } from "@/lib/srs";
+import { todayISO } from "@/lib/srs";
 import type { ListId } from "@/lib/catalog";
 import type { Snapshot, StudyStore } from "@/lib/store";
 import type {
@@ -137,13 +137,12 @@ export function useStudy(store: StudyStore, initial: Snapshot) {
   );
 
   /**
-   * The heart of the study loop: one rating both records the attempt and
-   * decides when the problem resurfaces.
+   * The heart of the study loop. The attempt log is what schedules topics
+   * (see topicSchedules), so rating just records it -- no per-problem date.
    */
   const rate = useCallback(
     async (problemId: string, rating: Rating, durationSeconds: number | null) => {
       const current = rowFor(problemId);
-      const schedule = nextSchedule(rating, current.solid_streak);
       const now = new Date().toISOString();
 
       commit(
@@ -153,8 +152,7 @@ export function useStudy(store: StudyStore, initial: Snapshot) {
           solved_at: current.solved_at ?? now,
           last_rating: rating,
           last_attempt_at: now,
-          due_on: schedule.dueOn,
-          solid_streak: schedule.solidStreak,
+          due_on: null,
         },
         "progress",
       );
@@ -184,8 +182,6 @@ export function useStudy(store: StudyStore, initial: Snapshot) {
           7000,
         );
       }
-
-      return schedule;
     },
     [rowFor, commit, store, pushToast],
   );
