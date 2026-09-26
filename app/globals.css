@@ -1850,3 +1850,9 @@ kbd {
 :root[data-theme="dark"] .icon-when-light { display: none; }
 :root[data-theme="light"] .icon-when-dark { display: none; }
 :root[data-theme="light"] .icon-when-light { display: inline-flex; }
+
+/* Sits inside .auth-actions; force it onto its own row under the buttons. */
+.cookie-warning {
+  flex-basis: 100%;
+  margin-top: 4px;
+}
